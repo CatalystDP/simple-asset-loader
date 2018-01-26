@@ -1,0 +1,5 @@
+{
+    "asyncA":"../async/asyncA.js",
+    "asyncB":"../async/asyncB.js",
+    "asyncC":"../async/asyncC.js"
+}

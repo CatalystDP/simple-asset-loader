@@ -1,0 +1,30 @@
+{
+  "name": "simple-asset-loader",
+  "version": "1.0.0",
+  "description": "simple asset loader",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-demo": "cd ./demo && ../node_modules/webpack/bin/webpack.js",
+    "debug": "cd ./demo && node --debug-brk ../node_modules/webpack/bin/webpack.js"
+  },
+  "keywords": [
+    "simple-asset-loader"
+  ],
+  "author": "CatalystDP",
+  "license": "MIT",
+  "dependencies": {
+    "eslint": "^4.16.0",
+    "global": "^4.3.2",
+    "webpack-sources": "^0.2.3"
+  },
+  "devDependencies": {
+    "loader-utils": "^1.1.0",
+    "webpack": "^2.4.1",
+    "yargs": "^8.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CatalystDP/webpack-localstorage-plugin.git"
+  }
+}
