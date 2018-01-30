@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-demo": "cd ./demo && ../node_modules/webpack/bin/webpack.js",
-    "debug": "cd ./demo && node --debug-brk ../node_modules/webpack/bin/webpack.js"
+    "debug": "cd ./demo && node --debug-brk ../node_modules/webpack/bin/webpack.js",
+    "debug-node8":"cd ./demo && node --inspect-brk ../node_modules/webpack/bin/webpack.js"
   },
   "keywords": [
     "simple-asset-loader"
