@@ -1,8 +1,10 @@
 const loaderUtil = require('loader-utils');
-const LOADER_NAME='simple-asset-loader';
+const LOADER_NAME = 'simple-asset-loader';
+const asyncWrap = {
+    START: 'module.exports=function(cb,errCb){',
+    END: '}'
+};
 module.exports = function (content, map, meta) {
-    console.log(this.query);
-    console.log('context ', this.context);
     let query;
     try {
         query = loaderUtil.parseQuery(this.query);
@@ -14,7 +16,7 @@ module.exports = function (content, map, meta) {
     }
     if (query.rule && typeof loaderConf[query.rule] === 'function') {
         //使用自定义rule，要包上一层function
-        return 'module.exports=function(cb,errCb){'+loaderConf[query.rule](this, query)+';}';
+        return asyncWrap.START + loaderConf[query.rule](this, query) + asyncWrap.END;
     }
     if (!!query.chunkName) {
         query.async = true;
@@ -23,14 +25,14 @@ module.exports = function (content, map, meta) {
         return `require(${JSON.stringify(this.resource)})`;
     } else {
         let chunkName = query.chunkName || '';
-        return `module.exports = function(cb,errCb){
+        return `${asyncWrap.START}
             require.ensure([],function(require){
                 var m = require(${JSON.stringify(this.resource)});
                 typeof cb === ${JSON.stringify('function')} && cb(m,${JSON.stringify(chunkName)});
             },function(err){
                 typeof errCb === ${JSON.stringify('function')} && errCb(err,${JSON.stringify(chunkName)})
             },${JSON.stringify(chunkName)});
-        }`;
+        ${asyncWrap.END}`;
     }
     return '';
 }
@@ -50,25 +52,46 @@ function transformToSwitchCase(assetMap, query = {}) {
     if (!map) return '';
     let cases = [];
     for (let key in map) {
-        let request =`${LOADER_NAME}?`;
-        let params=[];
-        params.push('chunkName='+key);
-        if(query.rule){
+        let request = `${LOADER_NAME}?`;
+        let params = [];
+        let val = map[key];
+        let fileName, async = true;
+        if (typeof val !== 'string') {
+            try {
+                fileName = val.name;
+                async = val.async !== false
+            } catch (_) { }
+        } else {
+            fileName = val;
+        }
+        if (!fileName) continue;
+        params.push('chunkName=' + key);
+        if (query.rule) {
             params.push(`rule=${query.rule}`);
         }
-        request+=params.join('&');
-        request+='!'
-        cases.push(`    
-                case ${JSON.stringify(key)}:
-                require(${JSON.stringify(request+map[key])})(
-                    function(mod){
-                        typeof cb===${JSON.stringify('function')} && cb(mod,${JSON.stringify(key)});
-                    },
-                    function(err){
-                        typeof errCb===${JSON.stringify('function')} && errCb(err,${JSON.stringify(key)});
-                    }
-                );
-                break;`);
+        request += params.join('&');
+        request += '!';
+        if (!async) {
+            //支持资源表的同步require
+            cases.push(`
+                case ${JSON.stringify(key)}: 
+                var mod = require(${JSON.stringify(fileName)});             
+                typeof cb === ${JSON.stringify('function')} && cb(mod);
+                break;
+            `); 
+        } else {
+            cases.push(`    
+                    case ${JSON.stringify(key)}:
+                    require(${JSON.stringify(request + fileName)})(
+                        function(mod){
+                            typeof cb===${JSON.stringify('function')} && cb(mod,${JSON.stringify(key)});
+                        },
+                        function(err){
+                            typeof errCb===${JSON.stringify('function')} && errCb(err,${JSON.stringify(key)});
+                        }
+                    );
+                    break;`);
+        }
     }
     return `
         module.exports=function(name,cb,errCb){

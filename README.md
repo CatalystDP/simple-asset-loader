@@ -68,10 +68,13 @@ module.exports=function(cb,errCb){
 
    ```
    {
-     "chunkA":"path-to-chunkA",
-     "chunkB":"path-to-chunkB",
-     "chunkC":"path-to-chunkC"
+       "asyncA":"../async/asyncA.js",
+       "asyncB":"../async/asyncB.js",
+       "asyncC":{
+           "name":"../async/asyncC.js",
+           "async":false
+       }
    }
    ```
 
-   调用`var assetRoute=require('simple-asset-loader?assetMap=true!assetMap.json');`回返回一个路由函数，通过调用`assetRoute(chunName,cb,errCb)`可以在`cb`回调内拿到对应的加载到的chunk 返回的对象，与异步加载类似。
+   调用`var assetRoute=require('simple-asset-loader?assetMap=true!assetMap.json');`回返回一个路由函数，通过调用`assetRoute(chunkName,cb,errCb)`可以在`cb`回调内拿到对应的加载到的chunk 返回的对象，与异步加载类似。默认情况下assetMap内的模块都是使用异步加载的，如果map的值是一个对象，必须要要提供`name`作为模块名，`async`是可选的，当`async=false`意味着使用普通的`require`加载模块，`require` 返回的对象依然是通过`cb`回调返回。
