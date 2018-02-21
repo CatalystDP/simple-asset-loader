@@ -1,6 +1,6 @@
 {
   "name": "simple-asset-loader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "simple asset loader",
   "main": "index.js",
   "scripts": {
