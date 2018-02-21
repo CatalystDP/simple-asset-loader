@@ -3,6 +3,7 @@
 const webpack = require('webpack'),
     path = require('path');
 const ROOTPATH = process.cwd();
+const simpleAssetLoader = require('../');
 let config = {
     DISTPATH: path.join(ROOTPATH, 'dist'),
     entry: {
@@ -30,6 +31,28 @@ let _config = {
     },
     loader: {
         simpleAssetConfig: {
+            test1: (context, options) => { 
+                let loadFun = simpleAssetLoader.defaultAsyncTpl({
+                    resource:context.resource,
+                    chunkName:options.chunkName||''
+                })
+                return `
+                    (function test1(){
+                        ${loadFun}
+                    })();
+                `; 
+            },
+            test2:(context,options) =>{
+                let loadFun = simpleAssetLoader.defaultAsyncTpl({
+                    resource:context.resource,
+                    chunkName:options.chunkName||''
+                })
+                return `
+                    (function test2(){
+                        ${loadFun}
+                    })();
+                `; 
+            }
         }
     }
 };

@@ -1,6 +1,9 @@
 {
     "asyncA":"../async/asyncA.js",
-    "asyncB":"../async/asyncB.js",
+    "asyncB":{
+        "name":"../async/asyncB.js",
+        "rule":"test2"
+    },
     "asyncC":{
         "name":"../async/asyncC.js",
         "async":false

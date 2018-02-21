@@ -4,7 +4,31 @@ const asyncWrap = {
     START: 'module.exports=function(cb,errCb){',
     END: '}'
 };
-module.exports = function (content, map, meta) {
+/**
+ * 
+ * @param {*} opt 
+ *      @param opt.resource 引用的资源地址
+ *      @param opt.chunkName 引用的模块名称 
+ */
+function defaultAsyncTpl(opt = {}) {
+    return `
+        require.ensure([],function(require){
+            var m = require(${JSON.stringify(opt.resource)});
+            typeof cb === ${JSON.stringify('function')} && cb(m,${JSON.stringify(opt.chunkName)});
+        },function(err){
+            typeof errCb === ${JSON.stringify('function')} && errCb(err,${JSON.stringify(opt.chunkName)})
+        },${JSON.stringify(opt.chunkName)});
+        `;
+};
+/**
+ * 
+ * @param {*} opt 
+ *      @param opt.resource 引用的资源地址 
+ */
+function defaultSyncTpl(opt = {}) {
+    return `require(${JSON.stringify(opt.resource)})`;
+}
+let loader = module.exports = function (content, map, meta) {
     let query;
     try {
         query = loaderUtil.parseQuery(this.query);
@@ -22,20 +46,22 @@ module.exports = function (content, map, meta) {
         query.async = true;
     }
     if (!query.async) {
-        return `require(${JSON.stringify(this.resource)})`;
+        return defaultSyncTpl({
+            resource: this.resource
+        });
     } else {
         let chunkName = query.chunkName || '';
-        return `${asyncWrap.START}
-            require.ensure([],function(require){
-                var m = require(${JSON.stringify(this.resource)});
-                typeof cb === ${JSON.stringify('function')} && cb(m,${JSON.stringify(chunkName)});
-            },function(err){
-                typeof errCb === ${JSON.stringify('function')} && errCb(err,${JSON.stringify(chunkName)})
-            },${JSON.stringify(chunkName)});
-        ${asyncWrap.END}`;
+        return asyncWrap.START + defaultAsyncTpl({
+            resource: this.resource,
+            chunkName
+        }) + asyncWrap.END;
     }
     return '';
 }
+Object.assign(loader, {
+    defaultAsyncTpl,
+    defaultSyncTpl
+});
 /**
  * @description 把一个资源表转化成switch case，必须是一个json文件 
  * @param {*} assetMap .e.g 
@@ -55,19 +81,23 @@ function transformToSwitchCase(assetMap, query = {}) {
         let request = `${LOADER_NAME}?`;
         let params = [];
         let val = map[key];
+        let rule = query.rule;
         let fileName, async = true;
         if (typeof val !== 'string') {
             try {
                 fileName = val.name;
-                async = val.async !== false
+                async = val.async !== false;
+                if(val.hasOwnProperty('rule')){
+                    rule = val.rule;
+                }
             } catch (_) { }
         } else {
             fileName = val;
         }
         if (!fileName) continue;
         params.push('chunkName=' + key);
-        if (query.rule) {
-            params.push(`rule=${query.rule}`);
+        if (rule) {
+            params.push(`rule=${rule}`);
         }
         request += params.join('&');
         request += '!';
@@ -78,7 +108,7 @@ function transformToSwitchCase(assetMap, query = {}) {
                 var mod = require(${JSON.stringify(fileName)});             
                 typeof cb === ${JSON.stringify('function')} && cb(mod);
                 break;
-            `); 
+            `);
         } else {
             cases.push(`    
                     case ${JSON.stringify(key)}:

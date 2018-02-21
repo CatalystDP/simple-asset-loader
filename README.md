@@ -66,10 +66,13 @@ module.exports=function(cb,errCb){
 
    4.`assetMap=true` 此时需要引用的资源需要是一个`json`文件，格式为：
 
-   ```
+   ```json
    {
        "asyncA":"../async/asyncA.js",
-       "asyncB":"../async/asyncB.js",
+       "asyncB":{
+           "name":"../async/asyncB.js",
+           "rule":"[rule defined in simpleAssetConfig]"
+       },
        "asyncC":{
            "name":"../async/asyncC.js",
            "async":false
@@ -77,4 +80,8 @@ module.exports=function(cb,errCb){
    }
    ```
 
-   调用`var assetRoute=require('simple-asset-loader?assetMap=true!assetMap.json');`回返回一个路由函数，通过调用`assetRoute(chunkName,cb,errCb)`可以在`cb`回调内拿到对应的加载到的chunk 返回的对象，与异步加载类似。默认情况下assetMap内的模块都是使用异步加载的，如果map的值是一个对象，必须要要提供`name`作为模块名，`async`是可选的，当`async=false`意味着使用普通的`require`加载模块，`require` 返回的对象依然是通过`cb`回调返回。
+   调用`var assetRoute=require('simple-asset-loader?assetMap=true!assetMap.json');`回返回一个路由函数，通过调用`assetRoute(chunkName,cb,errCb)`可以在`cb`回调内拿到对应的加载到的chunk 返回的对象，与异步加载类似。默认情况下assetMap内的模块都是使用异步加载的，如果map的值是一个对象，对像内容如下：
+
+   - name 模块的路径
+   - [async] 可选，表示是否对当前模块加载使用异步加载方式，当`async=false`意味着使用普通的`require`加载模块，`require` 返回的对象依然是通过`cb`回调返回。
+   - [rule] 可选，表示使用`simpleAssetConfig`内的模块加载规则，如果`rule`的值为空或者其他可以被认为是`false`的值，那么在加载这个模块时不会使用任何规则。
